@@ -1,10 +1,11 @@
 import express from 'express';
 import cors from 'cors';
-import { db, STAGES } from './db.js';
+import { db, STAGES, CONTACT_STATUSES } from './db.js';
 import contacts from './routes/contacts.js';
 import companies from './routes/companies.js';
 import deals from './routes/deals.js';
 import activities from './routes/activities.js';
+import workflows from './routes/workflows.js';
 
 const app = express();
 app.use(cors());
@@ -12,11 +13,13 @@ app.use(express.json());
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.get('/api/meta/stages', (_req, res) => res.json(STAGES));
+app.get('/api/meta/contact-statuses', (_req, res) => res.json(CONTACT_STATUSES));
 
 app.use('/api/contacts', contacts);
 app.use('/api/companies', companies);
 app.use('/api/deals', deals);
 app.use('/api/activities', activities);
+app.use('/api/workflows', workflows);
 
 // Dashboard summary
 app.get('/api/dashboard', (_req, res) => {

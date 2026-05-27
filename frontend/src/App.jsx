@@ -4,6 +4,7 @@ import Contacts from './pages/Contacts.jsx';
 import Companies from './pages/Companies.jsx';
 import Pipeline from './pages/Pipeline.jsx';
 import Activities from './pages/Activities.jsx';
+import Workflows from './pages/Workflows.jsx';
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <NavLink to="/contacts">Contacts</NavLink>
           <NavLink to="/companies">Companies</NavLink>
           <NavLink to="/activities">Activities</NavLink>
+          <NavLink to="/workflows">Workflows</NavLink>
         </nav>
       </aside>
       <main className="main">
@@ -25,6 +27,7 @@ export default function App() {
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/companies" element={<Companies />} />
           <Route path="/activities" element={<Activities />} />
+          <Route path="/workflows" element={<Workflows />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

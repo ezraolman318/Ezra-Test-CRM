@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
-import { api } from '../api.js';
+import { api, CONTACT_STATUSES } from '../api.js';
 import Modal from '../components/Modal.jsx';
 
-const blank = { first_name: '', last_name: '', email: '', phone: '', title: '', company_id: '', notes: '' };
+const blank = { first_name: '', last_name: '', email: '', phone: '', title: '', company_id: '', contact_status: 'Cold', notes: '' };
 
 export default function Contacts() {
   const [rows, setRows] = useState([]);
@@ -53,7 +53,7 @@ export default function Contacts() {
         ) : (
           <table>
             <thead>
-              <tr><th>Name</th><th>Title</th><th>Company</th><th>Email</th><th>Phone</th><th></th></tr>
+              <tr><th>Name</th><th>Title</th><th>Company</th><th>Status</th><th>Email</th><th>Phone</th><th></th></tr>
             </thead>
             <tbody>
               {rows.map(r => (
@@ -61,6 +61,7 @@ export default function Contacts() {
                   <td><strong>{r.first_name} {r.last_name}</strong></td>
                   <td>{r.title || '—'}</td>
                   <td>{r.company_name || '—'}</td>
+                  <td><span className={`status-pill ${r.contact_status || 'Cold'}`}>{r.contact_status || 'Cold'}</span></td>
                   <td>{r.email || '—'}</td>
                   <td>{r.phone || '—'}</td>
                   <td onClick={e => e.stopPropagation()}>
@@ -98,12 +99,20 @@ function ContactModal({ record, companies, onClose, onSave }) {
           <div className="field"><label>Last name</label><input value={form.last_name || ''} onChange={e => update('last_name', e.target.value)} /></div>
         </div>
         <div className="field"><label>Title</label><input value={form.title || ''} onChange={e => update('title', e.target.value)} /></div>
-        <div className="field">
-          <label>Company</label>
-          <select value={form.company_id || ''} onChange={e => update('company_id', e.target.value)}>
-            <option value="">—</option>
-            {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+        <div className="row">
+          <div className="field">
+            <label>Company</label>
+            <select value={form.company_id || ''} onChange={e => update('company_id', e.target.value)}>
+              <option value="">—</option>
+              {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Contact status</label>
+            <select value={form.contact_status || 'Cold'} onChange={e => update('contact_status', e.target.value)}>
+              {CONTACT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
         </div>
         <div className="row">
           <div className="field"><label>Email</label><input type="email" value={form.email || ''} onChange={e => update('email', e.target.value)} /></div>

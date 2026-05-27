@@ -1,8 +1,8 @@
 import { db } from './db.js';
 
 // Wipe and reseed for a clean demo state.
-db.exec(`DELETE FROM activities; DELETE FROM deals; DELETE FROM contacts; DELETE FROM companies;
-         DELETE FROM sqlite_sequence WHERE name IN ('activities','deals','contacts','companies');`);
+db.exec(`DELETE FROM activities; DELETE FROM deals; DELETE FROM contacts; DELETE FROM companies; DELETE FROM workflows;
+         DELETE FROM sqlite_sequence WHERE name IN ('activities','deals','contacts','companies','workflows');`);
 
 const companies = [
   { name: 'Northwind Studios', domain: 'northwind.studio', industry: 'Media' },
@@ -15,17 +15,17 @@ const insertCompany = db.prepare(`INSERT INTO companies (name, domain, industry)
 const companyIds = companies.map(c => insertCompany.run(c.name, c.domain, c.industry).lastInsertRowid);
 
 const contacts = [
-  { f: 'Maya',     l: 'Halpern',   e: 'maya@northwind.studio',   p: '555-0101', t: 'Head of Brand',  ci: 0 },
-  { f: 'Theo',     l: 'Park',      e: 'theo@beaconlabs.io',      p: '555-0102', t: 'CEO',            ci: 1 },
-  { f: 'Diana',    l: 'Okonkwo',   e: 'diana@tidelinecap.com',   p: '555-0103', t: 'Partner',        ci: 2 },
-  { f: 'Sam',      l: 'Reyes',     e: 'sam@arboretum.dev',       p: '555-0104', t: 'VP Growth',      ci: 3 },
-  { f: 'Priya',    l: 'Iyer',      e: 'priya@beaconlabs.io',     p: '555-0105', t: 'Marketing Lead', ci: 1 },
-  { f: 'Jules',    l: 'Calderon',  e: 'jules@pineconebakery.com',p: '555-0106', t: 'Owner',          ci: 4 },
-  { f: 'Felix',    l: 'Brand',     e: 'felix@northwind.studio',  p: '555-0107', t: 'Producer',       ci: 0 }
+  { f: 'Maya',     l: 'Halpern',   e: 'maya@northwind.studio',   p: '555-0101', t: 'Head of Brand',  ci: 0, s: 'Hot' },
+  { f: 'Theo',     l: 'Park',      e: 'theo@beaconlabs.io',      p: '555-0102', t: 'CEO',            ci: 1, s: 'Engaged' },
+  { f: 'Diana',    l: 'Okonkwo',   e: 'diana@tidelinecap.com',   p: '555-0103', t: 'Partner',        ci: 2, s: 'Hot' },
+  { f: 'Sam',      l: 'Reyes',     e: 'sam@arboretum.dev',       p: '555-0104', t: 'VP Growth',      ci: 3, s: 'Aware' },
+  { f: 'Priya',    l: 'Iyer',      e: 'priya@beaconlabs.io',     p: '555-0105', t: 'Marketing Lead', ci: 1, s: 'Engaged' },
+  { f: 'Jules',    l: 'Calderon',  e: 'jules@pineconebakery.com',p: '555-0106', t: 'Owner',          ci: 4, s: 'Hot' },
+  { f: 'Felix',    l: 'Brand',     e: 'felix@northwind.studio',  p: '555-0107', t: 'Producer',       ci: 0, s: 'Cold' }
 ];
-const insertContact = db.prepare(`INSERT INTO contacts (first_name, last_name, email, phone, title, company_id) VALUES (?, ?, ?, ?, ?, ?)`);
+const insertContact = db.prepare(`INSERT INTO contacts (first_name, last_name, email, phone, title, company_id, contact_status) VALUES (?, ?, ?, ?, ?, ?, ?)`);
 const contactIds = contacts.map(c =>
-  insertContact.run(c.f, c.l, c.e, c.p, c.t, companyIds[c.ci]).lastInsertRowid
+  insertContact.run(c.f, c.l, c.e, c.p, c.t, companyIds[c.ci], c.s).lastInsertRowid
 );
 
 const today = new Date();
@@ -78,4 +78,35 @@ activities.forEach(a => {
   );
 });
 
-console.log(`Seeded: ${companies.length} companies, ${contacts.length} contacts, ${deals.length} deals, ${activities.length} activities.`);
+const workflows = [
+  {
+    name: 'Beacon Labs contacts → Hot',
+    conditions: [{ field: 'company_name', operator: 'contains', value: 'Beacon' }],
+    match_mode: 'all',
+    actions: [{ field: 'contact_status', value: 'Hot', mode: 'set' }],
+    enabled: 1
+  },
+  {
+    name: 'CEOs and Owners → at least Engaged',
+    conditions: [
+      { field: 'title', operator: 'contains', value: 'CEO' },
+      { field: 'title', operator: 'contains', value: 'Owner' }
+    ],
+    match_mode: 'any',
+    actions: [{ field: 'contact_status', value: 'Engaged', mode: 'set' }],
+    enabled: 0
+  },
+  {
+    name: 'Tag finance contacts in notes',
+    conditions: [{ field: 'company_name', operator: 'contains', value: 'Tideline' }],
+    match_mode: 'all',
+    actions: [{ field: 'notes', value: '[finance]', mode: 'append' }],
+    enabled: 0
+  }
+];
+const insertWorkflow = db.prepare(
+  `INSERT INTO workflows (name, conditions, match_mode, actions, enabled) VALUES (?, ?, ?, ?, ?)`
+);
+workflows.forEach(w => insertWorkflow.run(w.name, JSON.stringify(w.conditions), w.match_mode, JSON.stringify(w.actions), w.enabled));
+
+console.log(`Seeded: ${companies.length} companies, ${contacts.length} contacts, ${deals.length} deals, ${activities.length} activities, ${workflows.length} workflows.`);
