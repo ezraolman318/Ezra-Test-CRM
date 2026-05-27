@@ -1,0 +1,16 @@
+@echo off
+REM Push this project to https://github.com/ezraolman318/Ezra-Test-CRM
+REM Run from inside the crm folder.
+
+if exist .git (
+  echo Removing existing .git ...
+  rmdir /s /q .git
+)
+
+git init -b main
+git config user.email "ezra.olman@gmail.com"
+git config user.name "Ezra Olman"
+git add .
+git commit -m "Initial commit: personal CRM (React + Express + node:sqlite)"
+git remote add origin https://github.com/ezraolman318/Ezra-Test-CRM.git
+git push -u origin main
